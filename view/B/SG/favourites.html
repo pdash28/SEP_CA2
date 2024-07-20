@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Favourites</title>
+    <script src="../checkCountry.js"></script> 
+    <script src="../../header.js"></script> 
+    <style>
+        .favourite-product {
+    display: flex;
+    align-items: center;
+    margin-bottom: 20px;
+    padding: 20px;
+    border: 1px solid #ccc;
+    background-color: #f9f9f9;
+    border-radius: 5px;
+}
+
+.product-image {
+    width: 150px;
+    height: 150px;
+    object-fit: cover;
+    margin-right: 20px;
+}
+
+.product-content {
+    display: flex;
+    align-items: center;
+}
+
+.product-details {
+    flex-grow: 1;
+}
+
+.product-details h3 {
+    margin: 0;
+    font-size: 1.5em;
+}
+
+.product-details p {
+    margin: 10px 0;
+    font-size: 1em;
+    color: #333;
+}
+
+.remove-favorite {
+    margin-top: 10px;
+    padding: 7px 10px;
+    color: white;
+    background-color: #d14f47;
+    border: none;
+    cursor: pointer;
+    border-radius: 5px;
+}
+
+.remove-favorite:hover {
+    background-color: darkred;
+}
+    </style>
+</head>
+<body>
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+    const favorites = JSON.parse(localStorage.getItem("favorites")) || [];
+    const container = document.getElementById("favorites-container");
+
+    if (favorites.length === 0) {
+        container.innerHTML = "<p>No favourites yet.</p>";
+        return;
+    }
+
+    favorites.forEach(sku => {
+        fetch(`/api/getFurnitureBySku?sku=${sku}`)
+            .then(response => response.json())
+            .then(product => {
+                const productHTML = `
+                    <div class="product favourite-product" data-sku="${sku}">
+                        <div class="product-content">
+                            <img class="product-image" src="${product.imageURL}" alt="${product.name}">
+                            <div class="product-details">
+                                <h3>${product.name}</h3>
+                                <p>${product.description}</p>
+                                <button class="remove-favorite" data-sku="${sku}">Remove</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                container.innerHTML += productHTML;
+            })
+            .catch(error => console.error(error));
+    });
+
+    container.addEventListener("click", function(event) {
+        if (event.target.classList.contains("remove-favorite")) {
+            const skuToRemove = event.target.dataset.sku;
+            const newFavorites = favorites.filter(sku => sku !== skuToRemove);
+            localStorage.setItem("favorites", JSON.stringify(newFavorites));
+            event.target.closest('.product').remove();
+        }
+    });
+});
+    </script>
+    <div class="body">
+        <script src="menu2.js"></script>
+        <div class="body">
+            <div role="main" class="main">
+                <section class="page-top">
+                    <div class="container">
+                        <div class="row">
+                            <div class="col-md-12">
+                                <h2>Favourites</h2>
+                            </div>
+                        </div>
+                    </div>
+                
+                </section>
+                <div class="container">
+                    <div id="favorites-container"></div>
+                </div>
+            </div>
+        </div>
+        <script src="../footer.js"></script>
+    </div>
+</body>
+</html>
