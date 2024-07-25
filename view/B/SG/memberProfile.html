@@ -2,6 +2,8 @@
 <html>
     <script src="../../header.js"></script>
     <body>
+        
+        <!-- new code fixing the bug -->
         <script>
             var authToken = null;
             var countryPrefix = localStorage.getItem('urlPrefix');
@@ -25,15 +27,15 @@
             }).catch(function (error) {
                 console.log(error);
             });
-
+        
             var member = null;
             document.addEventListener('DOMContentLoaded', function(){
                 member = JSON.parse(sessionStorage.getItem("member"));
-
+        
                 if(member.sla == 1) {
                     document.getElementById("serviceLevelAgreement").checked = true;
                 }
-
+        
                 //Get Bought Items
                 fetch(new Request('/api/getBoughtItem/' + member.id,
                 {
@@ -51,32 +53,23 @@
                         var htmlTxt = '';
                         var orderIdList = [];
                         var overallPrice = 0;
-                        var finalPrice = 0;
                         //get all order IDs
                         for (i = 0; i < boughtItem.length; i++) {
                             orderIdList[i] = boughtItem[i].id;
                         }
                         //unduplicate order IDs
                         orderIdList = [...new Set(orderIdList)];
-                        var temp;
-                        var size = orderIdList.length;
                         //sort order ID in ascending order
-                        for (i = 0; i < size - 1; i++) {
-                            for (j = 0; j < size - i - 1; j++) {
-                                if (orderIdList[j] > orderIdList[j+1]) {
-                                    temp = orderIdList[j];
-                                    orderIdList[j] = orderIdList[j+1];
-                                    orderIdList[j+1] = temp;
-                                }
-                            }
-                        }
-                                         
-                            htmlTxt += '<h5>Order #' + (1) + '</h5>';
+                        orderIdList.sort((a, b) => a - b);
+        
+                        for (let orderId of orderIdList) {
+                            var finalPrice = 0;
                             var counter = 0;
+                            htmlTxt += '<h5>Order #' + orderId + '</h5>';
+        
                             //get bought items by order ID
                             for (j = 0; j < boughtItem.length; j++) {
-                            
-                                if(boughtItem[j].id == orderIdList[0]) {
+                                if(boughtItem[j].id == orderId) {
                                     var item = boughtItem[j];
                                     //display top level info
                                     if(counter == 0) {
@@ -118,8 +111,7 @@
                                                             </thead>\
                                                             <tbody>';
                             for (y = 0; y < boughtItem.length; y++) {
-                            
-                                if (boughtItem[y].id == orderIdList[0]) {
+                                if (boughtItem[y].id == orderId) {
                                     var product = boughtItem[y];
                                     htmlTxt += '\
                                         <tr class="cart_table_item">\
@@ -136,41 +128,41 @@
                                                 <span class="qty">' + product.quantity + '</span>\
                                             </td>\
                                             <td class="product-subtotal">\
-                                                $<span class="amount">' + product.retailPrice.toFixed(2) * product.quantity + '</span>\
+                                                $<span class="amount">' + (product.retailPrice * product.quantity).toFixed(2) + '</span>\
                                             </td>\
                                         </tr>';
-                                    finalPrice += product.retailPrice.toFixed(2) * product.quantity;
-                                    overallPrice += product.retailPrice.toFixed(2) * product.quantity;
+                                    finalPrice += product.retailPrice * product.quantity;
+                                    overallPrice += product.retailPrice * product.quantity;
                                 }
                             }
                             htmlTxt += '\
-                                                                <tr>\
-                                                                    <td></td>\
-                                                                    <td></td>\
-                                                                    <td></td>\
-                                                                    <td class="product-subtotal" style="font-weight: bold; color: #cc3b33">Total:</td>\
-                                                                    <td class="product-subtotal" style="font-weight: bold">\
-                                                                        $<span class="amount" id="finalPrice" name="finalPrice">' + finalPrice + '</span>\
-                                                                    </td>\
-                                                                </tr>\
-                                                            </tbody>\
-                                                        </table>\
+                                                                    <tr>\
+                                                                        <td></td>\
+                                                                        <td></td>\
+                                                                        <td></td>\
+                                                                        <td class="product-subtotal" style="font-weight: bold; color: #cc3b33">Total:</td>\
+                                                                        <td class="product-subtotal" style="font-weight: bold">\
+                                                                            $<span class="amount" id="finalPrice" name="finalPrice">' + finalPrice.toFixed(2) + '</span>\
+                                                                        </td>\
+                                                                    </tr>\
+                                                                </tbody>\
+                                                            </table>\
+                                                        </div>\
                                                     </div>\
                                                 </div>\
                                             </div>\
                                         </div>\
-                                    </div>\
-                                </div>';
-                            finalPrice = 0;
-
-                        htmlTxt += '<h4 style="font-weight: bold; padding-left: 20px">Total Amount Spent: $'+ overallPrice + '</h4>';
+                                    </div>';
+                        }
+        
+                        htmlTxt += '<h4 style="font-weight: bold; padding-left: 20px">Total Amount Spent: $' + overallPrice.toFixed(2) + '</h4>';
                         document.getElementById("salesHistoryTab").innerHTML = htmlTxt;
                     }
                 }).catch(function(error) {
                     console.log(error);
                 });
             }, false);
-
+        
             function addWorkDays(startDate, days) {
                 var dow = startDate.getDay();
                 var daysToAdd = parseInt(days);
@@ -189,7 +181,7 @@
                 var options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
                 return startDate.toLocaleDateString("en-US", options);
             }
-
+        
             async function submitForm() {
                 var oldPassword = document.getElementById('oldPassword').value;
                 var password = document.getElementById("password").value;
@@ -202,7 +194,7 @@
                             id: member.id,
                             password: oldPassword
                         };
-
+        
                         await fetch(new Request('/api/verifyPassword',
                         {
                             method: 'POST',
@@ -219,70 +211,76 @@
                                     //Check if password and repassword is the same
                                     document.getElementById("password").style.borderColor = "#E34234";
                                     document.getElementById("repassword").style.borderColor = "#E34234";
-                                    alert("Passwords do not match. Please key again.");
+                                    document.getElementById("password").value = "";
+                                    document.getElementById("repassword").value = "";
                                     ok = false;
-                                } else if (password == repassword) {
-                                    //Check if password length is at least 8
-                                    if (password.length != 0 && password.length < 8) {
-                                        alert("Passwords too short. At least 8 characters.");
-                                        ok = false;
-                                    }
                                 }
                             }
                             else {
-                                alert("Old password is incorrect.");
+                                //Check if old password is correct
+                                document.getElementById("oldPassword").style.borderColor = "#E34234";
+                                document.getElementById("oldPassword").value = "";
+                                document.getElementById("password").value = "";
+                                document.getElementById("repassword").value = "";
                                 ok = false;
                             }
                         }).catch(function (error) {
                             console.log(error);
-                        }); 
+                        });
                     }
-
                     if(ok) {
-                        var data = {
-                            email: document.getElementById("email").value,
-                            name: document.getElementById("name").value,
-                            phone: document.getElementById("phone").value,
-                            country: document.getElementById("country").value,
-                            address: document.getElementById("address").value,
-                            securityQuestion: document.getElementById("securityQuestion").value,
-                            securityAnswer: document.getElementById("securityAnswer").value,
-                            age: document.getElementById("age").value,
-                            income: document.getElementById("income").value,
-                            sla: document.getElementById("serviceLevelAgreement").checked ? 1:0,
-                            password: document.getElementById("password").value
+                        member = JSON.parse(sessionStorage.getItem("member"));
+                        //create member json data
+                        var memberData = {
+                            id: member.id,
+                            username: member.username,
+                            email: document.getElementById('email').value,
+                            dob: member.dob,
+                            gender: member.gender,
+                            last_login_on: member.lastLoginOn,
+                            role: member.role,
+                            sla: document.getElementById("serviceLevelAgreement").checked,
+                            address: document.getElementById('address').value,
+                            postal_code: document.getElementById('postalCode').value,
+                            country: document.getElementById('country').value,
+                            customer_name: document.getElementById('customerName').value,
+                            phone: document.getElementById('phone').value,
+                            password: document.getElementById("password").value,
+                            clv: member.clv,
+                            running_total_spending: member.runningTotalSpending
                         };
-                        
-                        fetch(new Request('/api/updateMember',
+        
+                        await fetch(new Request('/api/updateMember',
                         {
-                            method: 'PUT',
+                            method: 'POST',
                             headers: {
                                 'Content-Type': 'application/json',
                                 Authorization: 'Bearer ' + authToken
                             },
-                            body: JSON.stringify(data)
+                            body: JSON.stringify(memberData)
                         })).then(function (response) {
                             return response.json();
                         }).then(function (data) {
-                            //update member's info in the session storage
-                            sessionStorage.setItem("member", JSON.stringify(data));
-                            sessionStorage.setItem("memberEmail", data.email);
-                            sessionStorage.setItem("memberName", data.name);
-                            var url = window.location.origin + window.location.pathname;
-                            window.location.href = url + '?goodMsg=Successfully Updated!';
+                            if(data.success) {
+                                //Update session storage
+                                sessionStorage.setItem("member", JSON.stringify(data.member));
+                                window.location.href = '/B/' + countryPrefix + '/profile.html';
+                            }
+                            else {
+                                document.getElementById("errorMessage").style.display = "block";
+                            }
                         }).catch(function (error) {
                             console.log(error);
-                            var url = window.location.origin + window.location.pathname;
-                            window.location.href = url + '?errMsg=Unable to Update.';
                         });
                     }
                 }
-            }
-
-            function pdpaWindow() {
-                var myWindow = window.open("pdpa.html");
+                else {
+                    document.getElementById("profileForm").reportValidity();
+                }
             }
         </script>
+        
+        
         <script src="menu2.js"></script>
         <div role="main" class="main">
             <section class="page-top">
