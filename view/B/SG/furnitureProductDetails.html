@@ -250,6 +250,23 @@
                         document.getElementById("furnitureName").textContent = furniture.name;
                         document.getElementById("price").textContent = `$${furniture.price}`;
                         document.getElementById("description").textContent = furniture.description;
+
+                        // Add height, length, and width information
+                        var furnitureInfo = `
+                            <span class="product-thumb-info-act-left">
+                                <em>Height: ${furniture.height}</em>
+                            </span><br/>
+                            <span class="product-thumb-info-act-left">
+                                <em>Length: ${furniture.length}</em>
+                            </span><br/>
+                            <span class="product-thumb-info-act-left">
+                                <em>Width: ${furniture.width}</em>
+                            </span>
+                        `;
+
+                        document.getElementById("furnitureInfo").innerHTML = furnitureInfo;
+
+                        
                         var categoryLink = document.getElementById("categoryLink");
                         categoryLink.textContent = furniture.category;
                         categoryLink.href = new URL(`/B/${countryPrefix}/furnitureCategory.html?cat=${encodeURIComponent(furniture.category)}`, window.location.origin);
@@ -430,6 +447,9 @@
                                     <p class="price"><h4 class="amount" id="price"></h4></p>
                                     <strong>Description</strong>
                                     <p class="taller" id="description"></p>
+                                    <p class="height" id="height"></p>
+                                    <p class="width" id="width"></p>
+                                    <p class="length" id="lenght"></p>
                                     <p id="furnitureInfo"></p>
                                     <div class="product_meta">
                                         <span class="posted_in">Category: <a id="categoryLink" rel="tag"></a></span>
